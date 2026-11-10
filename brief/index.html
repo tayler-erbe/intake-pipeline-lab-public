@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#142b36">
+<meta name="description" content="The design of a local document intake pipeline: one stage at a time, one model at a time, models swapped by configuration, nothing overwritten. A system design brief by Tayler Erbe, Document Intelligence Lab.">
+<title>Intake Pipeline Design · Document Intelligence Lab · Tayler Erbe</title>
+<meta property="og:type" content="website"><meta property="og:title" content="One stage at a time. One model at a time. Nothing overwritten."><meta property="og:description" content="How a local document intake pipeline is configured, how models are swapped, and the rules that keep its output honest. By Tayler Erbe."><meta property="og:url" content="https://tayler-erbe.github.io/intake-pipeline-lab-public/brief/"><meta name="twitter:card" content="summary"><meta name="author" content="Tayler Erbe">
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="site.css"><link rel="stylesheet" href="pipeline.css"><script src="pipeline.js" defer></script></head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+<header class="site-header">
+<a href="index.html" class="brand" aria-label="Document Intelligence Lab home"><span class="brand-mark">DI<span>↗</span></span><span>Document<br><strong>Intelligence Lab</strong></span></a>
+<nav aria-label="Main navigation"><a href="#why">Why</a><a href="#line">The line</a><a href="#configure">Configure</a><a href="#rules">Rules</a><a href="#catalogs">Catalogs</a><a href="#review">Review</a><a href="#next">Status</a></nav>
+<a class="repo-link" href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html">Model evaluation <span aria-hidden="true">↗</span></a>
+</header>
+<main id="main">
+
+<section class="hero">
+<div class="hero-copy">
+<p class="eyebrow">TAYLER ERBE / SYSTEM DESIGN · DOCUMENT INTAKE</p>
+<h1>One stage at a time. One model at a time. <em>Nothing overwritten.</em></h1>
+<p class="hero-deck">My model evaluation found no single model that reads every part of a document well. Tables, page text, charts and clauses each need a different route. This is the pipeline that runs those routes on hardware with one GPU, and keeps every answer traceable to the page it came from.</p>
+<p class="answer-line"><b>Short version:</b> each stage is one line of configuration. Swap the model, and the pipeline records a new version instead of replacing the old one. Code copies the text; models only point to it.</p>
+<div class="hero-actions">
+<a href="#line" class="button primary">See the line <span aria-hidden="true">↓</span></a>
+<a href="#configure" class="text-link">How a model is swapped ↓</a>
+<a href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html" class="text-link">Why these models ↗</a>
+</div>
+<p class="author-line"><span><b>Tayler Erbe</b> · Data scientist, applied AI · document pipelines that hold up to checking. <a href="#about">About</a></span></p>
+</div>
+<div class="hero-figure" id="hero-figure">
+<div class="figure-top"><span>THE DESIGN IN THREE IDEAS</span>
+<div class="hero-tabs" role="tablist" aria-label="Design ideas">
+<button role="tab" aria-selected="true" aria-controls="hp-swap" id="ht-swap">Swap</button>
+<button role="tab" aria-selected="false" aria-controls="hp-gpu" id="ht-gpu" tabindex="-1">One GPU</button>
+<button role="tab" aria-selected="false" aria-controls="hp-states" id="ht-states" tabindex="-1">Honest states</button>
+</div></div>
+<div class="hero-panel" id="hp-swap" role="tabpanel" aria-labelledby="ht-swap">
+<h2>Change one line.<br>Keep the old answers.</h2>
+<pre class="code" aria-label="A configuration change that swaps the fields model"><span class="c">// stage "fields"</span>
+<span class="del">- "served_model": "qwen3:32b"</span>
+<span class="add">+ "served_model": "gpt-oss:20b"</span></pre>
+<p>Every job is identified by its stage, model, version, prompt and input. A new model means new jobs, so earlier results stay as their own version and can be compared side by side.</p>
+<a class="figure-source" href="#configure">How swapping works <span>↓</span></a>
+</div>
+<div class="hero-panel" id="hp-gpu" role="tabpanel" aria-labelledby="ht-gpu" hidden>
+<h2>Load once.<br>Read everything. Unload.</h2>
+<ul>
+<li><span>Models resident on the GPU</span><b>1 at a time</b></li>
+<li><span>Stage runs across</span><b>the whole batch</b></li>
+<li><span>Work committed</span><b>after every job</b></li>
+<li><span>Missing model</span><b>refused, never substituted</b></li>
+</ul>
+<p>Stages run in order across every document, so each model loads once per batch instead of once per document. A stop or crash loses at most one job.</p>
+<a class="figure-source" href="#rules">The rules <span>↓</span></a>
+</div>
+<div class="hero-panel" id="hp-states" role="tabpanel" aria-labelledby="ht-states" hidden>
+<h2>"Not found" only<br>after a full read.</h2>
+<ul>
+<li><span>Found, with page and position</span><b>value</b></li>
+<li><span>Every page read, nothing there</span><b>absent</b></li>
+<li><span>Some pages not read yet</span><b>unread</b></li>
+<li><span>Model output failed checks</span><b>failed / rejected</b></li>
+</ul>
+<p>A field is never reported missing while part of the document is unread. Search answers "can't tell" for those documents instead of ruling them out.</p>
+<a class="figure-source" href="#rules">All the states <span>↓</span></a>
+</div>
+</div>
+</section>
+
+<section class="stat-strip" aria-label="Key facts">
+<div><strong>11</strong><span>stages, each set by one entry in a configuration file</span></div>
+<div><strong>1</strong><span>model on the GPU at a time, checked before every load</span></div>
+<div><strong>0</strong><span>results overwritten; every version is kept</span></div>
+<div><strong>2</strong><span>field catalogs: swap the document domain, not the code</span></div>
+</section>
+
+<section class="section wrap" id="why">
+<div class="section-head">
+<p class="eyebrow">00 / WHY IT MATTERS</p>
+<h2>Piles of documents,<br>one small GPU.</h2>
+<p>Contracts, leases and subscriptions hold the dates and dollars an organization has to act on. Finding them by hand is slow, and AI that reads a page wrong can be worse than no AI at all.</p>
+</div>
+<div class="results-band">
+<article><p class="route-id">THE DOCUMENTS</p><h3>Every file is a mix</h3><p>One contract can hold typed pages, scans, price tables, charts and highlighted clauses. No single AI model reads all of them well.</p></article>
+<article><p class="route-id">THE HARDWARE</p><h3>Private and local</h3><p>Sensitive documents should stay on the organization's own machine. That usually means one graphics card, which can hold one large model at a time.</p></article>
+<article><p class="route-id">THE TRUST</p><h3>Show your work</h3><p>A date or dollar amount is only useful if a person can see exactly where it came from and decide whether it is right.</p></article>
+</div>
+</section>
+
+<section class="section wrap" id="line">
+<div class="section-head">
+<p class="eyebrow">01 / THE LINE</p>
+<h2>An assembly line,<br>not a chatbot.</h2>
+<p>Documents are split into segments: prose, tables, forms, charts and highlighted passages. Each stage takes only the segments it handles, in order, across the whole batch.</p>
+</div>
+<ol class="pipeline">
+<li><span>01 / TAKE IN</span><h3>Ingest and triage</h3><p>Hash every file, skip duplicates, quarantine what can't be opened safely. Find native text, scanned pages, tables, forms, charts and highlights, and flag skewed or rotated pages.</p></li>
+<li><span>02 / READ</span><h3>Text first, models second</h3><p>Copy native text straight from the file. Reuse earlier OCR when it exists. Send only scanned pages to a page-reading model.</p></li>
+<li><span>03 / LOOK</span><h3>A route per region</h3><p>Layout, figure type, tables, charts and highlights each go to the model that tested best for that task.</p></li>
+<li><span>04 / UNDERSTAND</span><h3>Fields, then checks</h3><p>A text model points to the evidence for each field. Code normalizes dates, money and terms, then suggests document type and metadata.</p></li>
+</ol>
+<div class="compare-wrap" role="region" aria-label="The eleven stages" tabindex="0">
+<table class="compare stage-table">
+<thead><tr><th scope="col">Stage</th><th scope="col">Works on</th><th scope="col">What runs</th><th scope="col">Default route</th></tr></thead>
+<tbody>
+<tr><td>Copy the text<small>native_parse</small></td><td class="unit">segment</td><td>Copies native text, table cells, form values and highlighted text from the file</td><td><span class="tag rules">code</span></td></tr>
+<tr><td>Reuse earlier OCR<small>prior_ocr</small></td><td class="unit">segment</td><td>Reuses an existing OCR library for scanned pages, with line positions; optional</td><td><span class="tag rules">reuse</span></td></tr>
+<tr><td>Map the page<small>layout</small></td><td class="unit">segment</td><td>Finds tables, figures and text blocks on rendered pages</td><td><span class="tag model">DocLayout-YOLO</span></td></tr>
+<tr><td>Sort the figures<small>figure_classify</small></td><td class="unit">segment</td><td>Decides whether a figure is a chart, diagram or photo</td><td><span class="tag model">Qwen3-VL</span></td></tr>
+<tr><td>Read tables<small>table</small></td><td class="unit">segment</td><td>Reads scanned tables into rows and columns</td><td><span class="tag model">PaddleOCR-VL</span></td></tr>
+<tr><td>Read scanned pages<small>page_prose</small></td><td class="unit">segment</td><td>Reads scanned page text; skipped where prior OCR already read it</td><td><span class="tag model">Nemotron Parse</span></td></tr>
+<tr><td>Read charts<small>chart</small></td><td class="unit">segment</td><td>Turns a chart into a data table, with the evaluated prompt and limits</td><td><span class="tag model">Qwen3-VL</span></td></tr>
+<tr><td>Read highlights<small>highlight</small></td><td class="unit">segment</td><td>Transcribes highlighted passages on scanned pages</td><td><span class="tag model">Qwen2.5-VL</span></td></tr>
+<tr><td>Find the fields<small>fields</small></td><td class="unit">document</td><td>Proposes field values by pointing to evidence IDs</td><td><span class="tag model">Qwen3 32B</span></td></tr>
+<tr><td>Check and tidy<small>normalize</small></td><td class="unit">document</td><td>Parses dates, amounts, currencies and terms; checks line-item totals</td><td><span class="tag rules">code</span></td></tr>
+<tr><td>Describe the document<small>metadata</small></td><td class="unit">document</td><td>Suggests title, type, category and parties, each with its sources</td><td><span class="tag rules">rules</span></td></tr>
+</tbody>
+</table>
+</div>
+<p class="chart-note" style="margin-top:14px">Default routes follow my <a href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html">local model evaluation</a> on public benchmarks. They are starting points to confirm on real documents, not production approvals.</p>
+</section>
+
+<section class="use-section" id="configure">
+<div class="wrap">
+<div class="use-layout">
+<h2>Configure it.<br>Swap it.</h2>
+<div><p class="large-copy">Every stage is one entry in a routes file: which backend, which served model, which prompt, and the limits it runs under. Changing a model is a configuration change, not a code change.</p></div>
+</div>
+<div class="config-layout">
+<pre class="code" aria-label="One stage entry from the routes file"><span class="c">// one stage in routes.json (shortened)</span>
+{
+  <span class="k">"stage"</span>: <span class="s">"chart"</span>,
+  <span class="k">"unit"</span>: <span class="s">"segment"</span>,
+  <span class="k">"backend"</span>: <span class="s">"local_model"</span>,
+  <span class="k">"provider"</span>: <span class="s">"ollama"</span>,
+  <span class="k">"served_model"</span>: <span class="s">"qwen3-vl:8b"</span>,
+  <span class="k">"select"</span>: { <span class="k">"kind"</span>: [<span class="s">"chart"</span>], <span class="k">"source"</span>: [<span class="s">"raster"</span>] },
+  <span class="k">"prompt"</span>: <span class="s">"Extract the data shown in this chart as a table..."</span>,
+  <span class="k">"schema"</span>: <span class="s">"evaluated_table_schema"</span>,
+  <span class="k">"max_output_tokens"</span>: 3000,
+  <span class="k">"max_side"</span>: 1600,
+  <span class="k">"read_policy"</span>: <span class="s">"single"</span>,
+  <span class="k">"evaluated_configuration"</span>: {
+    <span class="k">"reproduced"</span>: [<span class="s">"prompt"</span>, <span class="s">"schema"</span>, <span class="s">"token budget"</span>, <span class="s">"image cap"</span>],
+    <span class="k">"not_reproduced"</span>: [<span class="s">"weights"</span>, <span class="s">"server"</span>]
+  }
+}</pre>
+<div>
+<h3>What each part does</h3>
+<p><b>select</b> decides which segments reach the stage. <b>provider</b> and <b>served_model</b> name a local server and model: Ollama or any OpenAI-compatible server such as vLLM. <b>prompt</b>, <b>schema</b> and the limits are sent exactly as written.</p>
+<p><b>evaluated_configuration</b> says which settings match how the route was tested and which do not. A check-out report prints it, so nobody mistakes a changed route for the tested one.</p>
+<p><b>Alternative routes</b> sit beside the defaults, unused. To try one, replace the stage entry with it. The default text model, for example, has a smaller candidate waiting.</p>
+<p class="status-note">Models run locally. Document content never goes to a hosted AI service.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="section wrap" id="swap" style="padding-bottom:0">
+<div class="section-head">
+<p class="eyebrow">02 / SWAPPING A MODEL</p>
+<h2>Six steps,<br>no rebuild.</h2>
+<p>The same steps work for any stage, and for any model a local server can host.</p>
+</div>
+<ol class="steps6">
+<li><h3>Edit the route</h3><p>Change the served model, and the prompt or limits if the new model needs them.</p></li>
+<li><h3>Run the check-out</h3><p>Each stage reads a small fictional test set. A stage passes only if its model is served and its output parses.</p></li>
+<li><h3>Refuse, don't substitute</h3><p>If the model isn't installed or served, the stage refuses. It never falls back to another model quietly.</p></li>
+<li><h3>Run the stage</h3><p>New jobs get a new identity. Earlier results stay in place as their own version.</p></li>
+<li><h3>Compare versions</h3><p>Both versions sit side by side for the same segments, so the change can be measured, not assumed.</p></li>
+<li><h3>Choose current</h3><p>A pointer records which version is current for each document, and the others stay on file.</p></li>
+</ol>
+</section>
+
+<section class="section wrap" id="rules">
+<div class="section-head">
+<p class="eyebrow">03 / RULES</p>
+<h2>What keeps the<br>output honest.</h2>
+<p>Each rule is enforced in code and covered by automated tests, not left to a prompt.</p>
+</div>
+<div class="route-grid six">
+<article class="route lead-route">
+<p class="route-id">EVIDENCE</p>
+<h3>Models point, code copies</h3>
+<p class="why">The text model returns evidence IDs, not text. Code copies the quoted words from the page, so a value can't contain words the document doesn't.</p>
+<span class="method-label">Every value has a page and position</span>
+<p class="caution">Proves where text came from, not that it answers the question. Accuracy still needs review.</p>
+</article>
+<article class="route">
+<p class="route-id">PRODUCERS</p>
+<h3>Every value says who made it</h3>
+<p class="why">Each value is labelled code, rules, model or stub. Test-stub output is never searchable, exported or offered for review as fact, and anything derived from it inherits the label.</p>
+<span class="method-label">Placeholders can't leak into results</span>
+</article>
+<article class="route">
+<p class="route-id">STATES</p>
+<h3>Absent only after a full read</h3>
+<p class="why">A field is absent only when every page was read. Otherwise it is unread, failed, rejected or insufficient, and says which.</p>
+<span class="method-label">No false "not found"</span>
+</article>
+<article class="route">
+<p class="route-id">VERSIONS</p>
+<h3>Nothing is overwritten</h3>
+<p class="why">A job's identity is its stage, backend, model, version, prompt hash and input hash. Changing any of them creates new jobs alongside the old ones.</p>
+<span class="method-label">Every run can be compared</span>
+</article>
+<article class="route">
+<p class="route-id">ONE GPU</p>
+<h3>One model resident</h3>
+<p class="why">Before each load, the pipeline checks what is already on the GPU, for every server kind, and refuses if another model is still there.</p>
+<span class="method-label">Built for one 24 to 48 GB card</span>
+</article>
+<article class="route">
+<p class="route-id">RESTARTS</p>
+<h3>Stop anywhere, resume safely</h3>
+<p class="why">Work is committed per job. Pause, resume, retry limits, a runtime lock and a quarantine are part of the design, not afterthoughts.</p>
+<span class="method-label">A crash loses at most one job</span>
+</article>
+</div>
+<div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>Traceable is not the same as correct.</h3><p>A value copied from the right page can still answer the wrong question. That is why every model-proposed value goes to a person before it counts, and why accuracy is measured separately.</p></div><a href="#next">How it will be measured ↓</a></div>
+</section>
+
+<section class="use-section" id="catalogs">
+<div class="wrap">
+<div class="use-layout">
+<h2>Swap the domain,<br>not the code.</h2>
+<div><p class="large-copy">What to extract lives in a field catalog: each field's name, category, type, whether it is critical, and how to normalize it. A different kind of document gets a different catalog.</p></div>
+</div>
+<div class="roadmap" style="margin-top:45px">
+<article><span>CATALOG 1</span><h3>Procurement</h3><p>Contracts, leases, service subscriptions and consulting scopes. Fields grouped into ten categories: dates and terms, termination, pricing and payment, scope, products, leasing, rights, parties, identifiers, and risk.</p></article>
+<article><span>CATALOG 2</span><h3>Proposals and awards</h3><p>A second, provisional catalog with its own fields and vocabulary, to show the same line serving a different domain.</p></article>
+<article><span>SAFETY</span><h3>No mixing</h3><p>Each runtime records its catalog and refuses to open under a different one, so two domains' fields never mix in one database.</p></article>
+<article><span>CHANGE</span><h3>Proposed, then approved</h3><p>New fields load as proposals until the owner approves them. The catalog is versioned like everything else.</p></article>
+</div>
+</div>
+</section>
+
+<section class="section wrap" id="review">
+<div class="section-head">
+<p class="eyebrow">04 / REVIEW AND OPERATIONS</p>
+<h2>Built for the person<br>checking the work.</h2>
+<p>Extraction is half the job. The rest is letting a reviewer find, check and correct values quickly, and letting an operator run it unattended.</p>
+</div>
+<div class="results-band">
+<article><p class="route-id">REVIEW</p><h3>Workbench and queue</h3><p>One offline page per batch: each document's fields beside cropped source regions. A queue puts the riskiest values first. Decisions are exported and imported as files, with duplicate imports refused.</p></article>
+<article><p class="route-id">SEARCH</p><h3>Plain-language questions</h3><p>Questions like "leases over $100,000 that auto-renew" become filters. Rules parse the question; an optional small local model can help, but rules win and code converts every number and date.</p></article>
+<article><p class="route-id">LINKS</p><h3>Related documents</h3><p>Amendments, references, shared identifiers, near-duplicates, and a scan matched to its clean original. All are proposals for a person to confirm.</p></article>
+<article><p class="route-id">DATES</p><h3>Obligations calendar</h3><p>Renewal, notice and expiry dates from reviewed values, exported as a calendar and spreadsheet.</p></article>
+<article><p class="route-id">OPERATIONS</p><h3>Inbox and status page</h3><p>Drop files in a folder; a poller waits for them to settle, runs the line and writes a status page. Pause, stop, retry and purge leave an audit trail.</p></article>
+<article><p class="route-id">FORMATS</p><h3>PDF, Word and Excel</h3><p>Office files are parsed as data, not printed to images. Spreadsheets keep their cells and numbers.</p></article>
+</div>
+</section>
+
+<section class="use-section" id="next">
+<div class="wrap">
+<div class="use-layout">
+<h2>Where it stands.</h2>
+<div><p class="large-copy">The pipeline is built and tested end to end on fictional documents, with placeholder models standing in for real ones. No accuracy is claimed. That comes from a labelled pilot, measured the way the model evaluation was.</p></div>
+</div>
+<div class="roadmap" style="margin-top:45px">
+<article><span>01 / CHECK OUT</span><h3>Real models in place</h3><p>Install each route's model on the target machine and pass the check-out, stage by stage.</p></article>
+<article><span>02 / RUN</span><h3>Real documents</h3><p>Run the full line with real models on a sample set, locally, and fix what real documents expose.</p></article>
+<article><span>03 / MEASURE</span><h3>Labelled pilot</h3><p>Reviewers label 100 to 300 documents. Accuracy is reported per field against a locked holdout, with confidence intervals.</p></article>
+<article><span>04 / CALIBRATE</span><h3>Tune on evidence</h3><p>Set thresholds and swap routes only where the pilot shows a measured gain.</p></article>
+</div>
+<div class="next-footer"><p><strong>Why a pilot, not a benchmark.</strong> Public benchmarks chose the starting models. Only labelled documents from the real domain can say how well the whole line works, field by field.</p><a class="text-link" href="https://github.com/tayler-erbe/test-ocr-work/blob/main/docs/roadmap.md">Implementation roadmap ↗</a></div>
+</div>
+</section>
+
+<section class="resources wrap" id="resources">
+<div>
+<p class="eyebrow">05 / RELATED WORK</p>
+<h2>Where the routes<br>came from.</h2>
+<p class="hero-deck">This page shares the design only. The pipeline code is private; the model evaluation behind its routes is public.</p>
+</div>
+<div class="resource-links">
+<a href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html"><span>Document intelligence evaluation · case study</span><b>↗</b></a>
+<a href="https://github.com/tayler-erbe/test-ocr-work"><span>Local document intelligence evaluation · GitHub</span><b>↗</b></a>
+<a href="https://github.com/tayler-erbe/test-ocr-work/blob/main/docs/EVALUATION.md"><span>Final advisory · methods, results and recommendations</span><b>↗</b></a>
+<a href="https://github.com/tayler-erbe/test-ocr-work/blob/main/docs/roadmap.md"><span>Scalable intake pipeline · implementation roadmap</span><b>↗</b></a>
+<a href="https://github.com/tayler-erbe/intake-pipeline-lab-public"><span>This page on GitHub</span><b>↗</b></a>
+<a href="https://taylererbe.com/"><span>Portfolio · taylererbe.com</span><b>↗</b></a>
+</div>
+</section>
+
+<section class="section wrap" id="about" style="padding-top:20px">
+<div class="use-layout">
+<div><p class="eyebrow">ABOUT THIS WORK</p><h2 style="font-size:clamp(30px,3vw,42px)">Tayler Erbe</h2></div>
+<div>
+<p class="large-copy" style="font-size:20px">I am a data scientist working in applied AI. I build data products that hold up to checking, and I test AI tools before anyone relies on them.</p>
+<p>This page describes the design of a document intake pipeline built as a prototype. Its examples use fictional documents only. AI assistants helped build and test the code. To talk about document pipelines for your own work, see <a href="https://taylererbe.com/">my site</a>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="wrap">
+<div><strong>Document Intelligence Lab</strong><p>Tayler Erbe · Last updated 10 November 2026 · System design only. Prototype; accuracy not yet measured.</p></div>
+<a href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html">Model evaluation ↗</a>
+</footer>
+</body>
+</html>
