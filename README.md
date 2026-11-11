@@ -2,7 +2,7 @@
 
 **How do you pull dates, dollars and terms out of a pile of mixed contracts, privately, on one graphics card, and still show where every answer came from?**
 
-A system design brief by **Tayler Erbe**, Document Intelligence Lab. It describes a document intake pipeline built as a working prototype: how it is organized, how its AI models are configured and swapped, and the rules that keep its output honest.
+A system design brief by **Tayler Erbe**, Applied AI Lab. It describes a document intake pipeline built as a working prototype: how it is organized, how its AI models are configured and swapped, and the rules that keep its output honest.
 
 **Read the brief:** [tayler-erbe.github.io/intake-pipeline-lab-public/brief/](https://tayler-erbe.github.io/intake-pipeline-lab-public/brief/)
 
