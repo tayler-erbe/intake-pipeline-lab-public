@@ -24,3 +24,5 @@
 .stage-table{width:100%;border-collapse:collapse;border-top:1px solid var(--line)}
 .stage-table th{text-align:left;font:600 11px var(--body);letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:14px 12px 12px 0}
 .stage-table td{border-bottom:1px solid var(--line);padding:13px 12px 13px 0;font-size:14px;vertical-align:top}
+.results-compare{min-width:560px}
+@media(max-width:600px){.stage-table.results-compare th:nth-child(2){display:table-cell}}

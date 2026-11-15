@@ -15,14 +15,15 @@ A system design brief by **Tayler Erbe**, Applied AI Lab. It describes a documen
 
 ## Where it stands
 
-The pipeline is built and tested end to end on fictional documents, with placeholder models standing in for real ones. **No accuracy is claimed.** The next step is a labelled pilot: reviewers check 100 to 300 real documents, and accuracy is reported field by field.
+The pipeline runs end to end with real models on one GPU. On 72 generated documents with a known answer key, the routed design got 94.3% of critical fields right in 75 minutes; one large model doing every stage got 86.6% in about 2 hours 10 minutes. **No accuracy on real documents is claimed.** The next step is a labelled pilot: reviewers check 100 to 300 real documents, and accuracy is reported field by field.
 
 ## What is and isn't here
 
 | Here | Not here |
 |---|---|
 | The design brief (`brief/`) | Pipeline source code (kept private) |
-| Stage list, configuration format, design rules | Any real documents, extracted values or results |
+| Stage list, configuration format, design rules | Any real documents or anything extracted from them |
+| Results on generated (fictional) documents | Accuracy on real documents (not yet measured) |
 
 ## Related work
 

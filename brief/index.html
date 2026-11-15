@@ -8,7 +8,7 @@
 <a href="#main" class="skip">Skip to content</a>
 <header class="site-header">
 <a href="index.html" class="brand" aria-label="Applied AI Lab home"><span class="brand-mark">AI<span>↗</span></span><span>Applied AI<br><strong>Lab</strong></span></a>
-<nav aria-label="Main navigation"><a href="#why">Why</a><a href="#line">The line</a><a href="#configure">Configure</a><a href="#rules">Rules</a><a href="#catalogs">Catalogs</a><a href="#review">Review</a><a href="#next">Status</a></nav>
+<nav aria-label="Main navigation"><a href="#why">Why</a><a href="#line">The line</a><a href="#configure">Configure</a><a href="#rules">Rules</a><a href="#catalogs">Catalogs</a><a href="#review">Review</a><a href="#results">Results</a><a href="#next">Status</a></nav>
 <a class="repo-link" href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html">Model evaluation <span aria-hidden="true">↗</span></a>
 </header>
 <main id="main">
@@ -250,15 +250,43 @@
 </div>
 </section>
 
+<section class="section wrap" id="results">
+<div class="section-head">
+<p class="eyebrow">05 / RESULTS ON GENERATED DOCUMENTS</p>
+<h2>Routed, against one<br>big model.</h2>
+<p>The design claims that a specialist model per stage beats one large model doing everything. In November 2026 that was tested: three designs read the same 72 generated documents (1,276 pages) on one 32 GB graphics card, and code scored every extracted value against a known answer key.</p>
+</div>
+<div class="compare-wrap">
+<table class="compare stage-table results-compare">
+<thead><tr><th>Measure</th><th>Routed pipeline</th><th>One large model</th><th>Small-card models</th></tr></thead>
+<tbody>
+<tr><td>What ran<small>models per design</small></td><td>A specialist per stage: PaddleOCR-VL-1.6, Nemotron 3.5 Parse, Qwen3-VL 32B, Qwen3 32B</td><td>Qwen3-VL 32B for every stage: the largest general vision model the card could hold</td><td>The same two parsers, with Qwen3-VL 8B and gpt-oss-20b, held to 22.5 GB of memory</td></tr>
+<tr><td>Critical fields correct<small>299 answers</small></td><td><b>94.3%</b></td><td>86.6%</td><td>76.3%</td></tr>
+<tr><td>All values correct<small>780 answers</small></td><td><b>87.7%</b></td><td>86.4%</td><td>75.9%</td></tr>
+<tr><td>Values claimed that the document does not contain</td><td><b>138</b></td><td>231</td><td>257</td></tr>
+<tr><td>Table rows read<small>2,922 rows</small></td><td>2,914</td><td>2,914</td><td>2,914</td></tr>
+<tr><td>Chart points within 5%<small>96 points</small></td><td>50</td><td>50</td><td><b>73</b></td></tr>
+<tr><td>Time for all 72 documents</td><td><b>75 minutes</b></td><td>about 2 hours 10 minutes</td><td>98 minutes</td></tr>
+</tbody>
+</table>
+</div>
+<div class="results-band" style="margin-top:40px">
+<article><p class="route-id">ACCURACY</p><h3>Close overall, apart where it matters</h3><p>On all values the routed pipeline and the single model are within each other&rsquo;s margin of error. On critical fields (dates, amounts, renewal and termination terms) the routed pipeline is ahead by almost eight points, and it makes far fewer unsupported claims.</p></article>
+<article><p class="route-id">SPEED</p><h3>Routing was faster, not slower</h3><p>Changing models between stages cost about 5 of the 75 minutes. The small parsers read tables and scanned pages many times faster than a large general model, which more than pays for the swaps.</p></article>
+<article><p class="route-id">SMALL CARD</p><h3>It fits, at a price</h3><p>The small-card set ran end to end inside 22.5 GB but lost about 12 points, almost all in the model that fills in the fields. That model is the one to replace before running on a 24 GB card.</p></article>
+</div>
+<div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>What these numbers are, and are not.</h3><p>The documents are generated: fictional contracts, leases and purchase orders with scans, tables, charts and highlights, built so the right answers are known. The numbers compare designs with each other. They are not accuracy on real documents. The line has also run end to end on a private sample of real documents (869 pages in about two hours, before requests ran in parallel), on local hardware only. Nothing from those documents is published, and accuracy on them stays unmeasured until reviewers label them. Small-card times were measured on the larger card with memory capped, not on a 24 GB card. The generated tables were clean enough that all three table readers returned the same cells.</p></div></div>
+</section>
+
 <section class="use-section" id="next">
 <div class="wrap">
 <div class="use-layout">
 <h2>Where it stands.</h2>
-<div><p class="large-copy">The pipeline is built and tested end to end on fictional documents, with placeholder models standing in for real ones. No accuracy is claimed. That comes from a labelled pilot, measured the way the model evaluation was.</p></div>
+<div><p class="large-copy">The pipeline runs end to end with real models on one GPU, and its routing has been compared with a single large model on generated documents. Accuracy on real documents is not claimed. That comes from a labelled pilot, measured the way the model evaluation was.</p></div>
 </div>
 <div class="roadmap" style="margin-top:45px">
-<article><span>01 / CHECK OUT</span><h3>Real models in place</h3><p>Install each route's model on the target machine and pass the check-out, stage by stage.</p></article>
-<article><span>02 / RUN</span><h3>Real documents</h3><p>Run the full line with real models on a sample set, locally, and fix what real documents expose.</p></article>
+<article><span>01 / DONE</span><h3>Real models in place</h3><p>Every route's model is installed on a desktop GPU and passes the check-out, stage by stage. The target server cards come next.</p></article>
+<article><span>02 / DONE</span><h3>Full runs</h3><p>The full line has run on generated study sets with answer keys, and locally on a private sample of real documents.</p></article>
 <article><span>03 / MEASURE</span><h3>Labelled pilot</h3><p>Reviewers label 100 to 300 documents. Accuracy is reported per field against a locked holdout, with confidence intervals.</p></article>
 <article><span>04 / CALIBRATE</span><h3>Tune on evidence</h3><p>Set thresholds and swap routes only where the pilot shows a measured gain.</p></article>
 </div>
@@ -268,9 +296,9 @@
 
 <section class="resources wrap" id="resources">
 <div>
-<p class="eyebrow">05 / RELATED WORK</p>
+<p class="eyebrow">06 / RELATED WORK</p>
 <h2>Where the routes<br>came from.</h2>
-<p class="hero-deck">This page shares the design only. The pipeline code is private; the model evaluation behind its routes is public.</p>
+<p class="hero-deck">This page shares the design and results on generated documents. The pipeline code is private; the model evaluation behind its routes is public.</p>
 </div>
 <div class="resource-links">
 <a href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html"><span>Document intelligence evaluation · case study</span><b>↗</b></a>
@@ -293,7 +321,7 @@
 </section>
 </main>
 <footer class="wrap">
-<div><strong>Applied AI Lab</strong><p>Tayler Erbe · Last updated 10 November 2026 · System design only. Prototype; accuracy not yet measured.</p></div>
+<div><strong>Applied AI Lab</strong><p>Tayler Erbe · Last updated 14 November 2026 · System design and results on generated documents. Prototype; accuracy on real documents not yet measured.</p></div>
 <a href="https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html">Model evaluation ↗</a>
 </footer>
 </body>
