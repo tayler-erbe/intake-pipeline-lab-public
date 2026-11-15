@@ -254,13 +254,13 @@
 <div class="section-head">
 <p class="eyebrow">05 / RESULTS ON GENERATED DOCUMENTS</p>
 <h2>Routed, against one<br>big model.</h2>
-<p>The design claims that a specialist model per stage beats one large model doing everything. In November 2026 that was tested: three designs read the same 72 generated documents (1,276 pages) on one 32 GB graphics card, and code scored every extracted value against a known answer key.</p>
+<p>The design claims that a specialist model per stage beats one large model doing everything. In November 2026 I tested that claim: three setups read the same 72 generated documents (1,276 pages) on one 32 GB graphics card, and code scored every extracted value against a known answer key.</p>
 </div>
 <div class="compare-wrap">
 <table class="compare stage-table results-compare">
 <thead><tr><th>Measure</th><th>Routed pipeline</th><th>One large model</th><th>Small-card models</th></tr></thead>
 <tbody>
-<tr><td>What ran<small>models per design</small></td><td>A specialist per stage: PaddleOCR-VL-1.6, Nemotron 3.5 Parse, Qwen3-VL 32B, Qwen3 32B</td><td>Qwen3-VL 32B for every stage: the largest general vision model the card could hold</td><td>The same two parsers, with Qwen3-VL 8B and gpt-oss-20b, held to 22.5 GB of memory</td></tr>
+<tr><td>Models used in each setup</td><td>A specialist per stage: PaddleOCR-VL-1.6, Nemotron 3.5 Parse, Qwen3-VL 32B, Qwen3 32B</td><td>Qwen3-VL 32B for every stage: the largest general vision model the card could hold</td><td>The same two parsers, with Qwen3-VL 8B and gpt-oss-20b, held to 22.5 GB of memory</td></tr>
 <tr><td>Critical fields correct<small>299 answers</small></td><td><b>94.3%</b></td><td>86.6%</td><td>76.3%</td></tr>
 <tr><td>All values correct<small>780 answers</small></td><td><b>87.7%</b></td><td>86.4%</td><td>75.9%</td></tr>
 <tr><td>Values given where the answer key has none<small>lower is better</small></td><td><b>138</b></td><td>231</td><td>257</td></tr>
@@ -271,9 +271,9 @@
 </table>
 </div>
 <div class="results-band" style="margin-top:40px">
-<article><p class="route-id">ACCURACY</p><h3>Close overall, apart where it matters</h3><p>On all values the routed pipeline and the single model are within each other&rsquo;s margin of error. On critical fields (dates, amounts, renewal and termination terms) the routed pipeline is ahead by almost eight points, and it gives far fewer values for fields the answer key leaves empty.</p></article>
-<article><p class="route-id">SPEED</p><h3>Routing was faster, not slower</h3><p>Changing models between stages cost about 5 of the 75 minutes. The small parsers read tables and scanned pages many times faster than a large general model, which more than pays for the swaps.</p></article>
-<article><p class="route-id">SMALL CARD</p><h3>It fits, at a price</h3><p>The small-card set ran end to end inside 22.5 GB but lost about 12 points, almost all in the model that fills in the fields. That model is the one to replace before running on a 24 GB card.</p></article>
+<article><p class="route-id">ACCURACY</p><h3>Close overall, except where it matters</h3><p>On all values the routed pipeline and the single model are 1.3 points apart on 780 answers, inside the 95% interval of either result. On critical fields (dates, amounts, renewal and termination terms) the routed pipeline is ahead by almost eight points, and it gives fewer values for fields the answer key leaves empty: 138 against 231, about 40% fewer.</p></article>
+<article><p class="route-id">SPEED</p><h3>Routing was also faster</h3><p>Changing models between stages cost about 5 of the 75 minutes. The small parsers read tables and scanned pages many times faster than a large general model, which more than pays for the swaps.</p></article>
+<article><p class="route-id">SMALL CARD</p><h3>It fits, at a price</h3><p>The small-card set ran end to end inside 22.5 GB but lost about 12 points on all values and 18 on critical fields, almost all in the model that fills in the fields. That model is the one to replace before running on a 24 GB card.</p></article>
 </div>
 <div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>What these numbers are, and are not.</h3><p>The documents are generated: fictional contracts, leases and purchase orders with scans, tables, charts and highlights, built so the right answers are known. The numbers compare designs with each other. They are not accuracy on real documents. A value given where the key has none is still copied from the page, or worked out by code from copied values: the words are real, but that field has no answer in that document. Typical cases are a number in the title taken as a reference number, and an end date worked out from a start date and a term. The line has also run end to end on a private sample of real documents, on private hardware, with no outside service involved. No figures from that run are published, and accuracy on those documents stays unmeasured until reviewers label them. Small-card times were measured on the larger card with memory capped, not on a 24 GB card. The generated tables were clean enough that all three table readers returned the same cells.</p></div></div>
 </section>
