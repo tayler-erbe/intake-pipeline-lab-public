@@ -275,7 +275,7 @@
 <article><p class="route-id">SPEED</p><h3>Routing was faster, not slower</h3><p>Changing models between stages cost about 5 of the 75 minutes. The small parsers read tables and scanned pages many times faster than a large general model, which more than pays for the swaps.</p></article>
 <article><p class="route-id">SMALL CARD</p><h3>It fits, at a price</h3><p>The small-card set ran end to end inside 22.5 GB but lost about 12 points, almost all in the model that fills in the fields. That model is the one to replace before running on a 24 GB card.</p></article>
 </div>
-<div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>What these numbers are, and are not.</h3><p>The documents are generated: fictional contracts, leases and purchase orders with scans, tables, charts and highlights, built so the right answers are known. The numbers compare designs with each other. They are not accuracy on real documents. The line has also run end to end on a private sample of real documents (869 pages in about two hours, before requests ran in parallel), on local hardware only. Nothing from those documents is published, and accuracy on them stays unmeasured until reviewers label them. Small-card times were measured on the larger card with memory capped, not on a 24 GB card. The generated tables were clean enough that all three table readers returned the same cells.</p></div></div>
+<div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>What these numbers are, and are not.</h3><p>The documents are generated: fictional contracts, leases and purchase orders with scans, tables, charts and highlights, built so the right answers are known. The numbers compare designs with each other. They are not accuracy on real documents. The line has also run end to end on a private sample of real documents (869 pages in about two hours, before requests ran in parallel), on private hardware, with no outside service involved. Nothing from those documents is published, and accuracy on them stays unmeasured until reviewers label them. Small-card times were measured on the larger card with memory capped, not on a 24 GB card. The generated tables were clean enough that all three table readers returned the same cells.</p></div></div>
 </section>
 
 <section class="use-section" id="next">
@@ -285,8 +285,8 @@
 <div><p class="large-copy">The pipeline runs end to end with real models on one GPU, and its routing has been compared with a single large model on generated documents. Accuracy on real documents is not claimed. That comes from a labelled pilot, measured the way the model evaluation was.</p></div>
 </div>
 <div class="roadmap" style="margin-top:45px">
-<article><span>01 / DONE</span><h3>Real models in place</h3><p>Every route's model is installed on a desktop GPU and passes the check-out, stage by stage. The target server cards come next.</p></article>
-<article><span>02 / DONE</span><h3>Full runs</h3><p>The full line has run on generated study sets with answer keys, and locally on a private sample of real documents.</p></article>
+<article><span>01 / DONE</span><h3>Real models in place</h3><p>Every route's model is installed on a single 32 GB GPU and passes the check-out, stage by stage. The smaller and larger target cards come next.</p></article>
+<article><span>02 / DONE</span><h3>Full runs</h3><p>The full line has run on generated study sets with answer keys, and on a private sample of real documents, on private hardware.</p></article>
 <article><span>03 / MEASURE</span><h3>Labelled pilot</h3><p>Reviewers label 100 to 300 documents. Accuracy is reported per field against a locked holdout, with confidence intervals.</p></article>
 <article><span>04 / CALIBRATE</span><h3>Tune on evidence</h3><p>Set thresholds and swap routes only where the pilot shows a measured gain.</p></article>
 </div>
