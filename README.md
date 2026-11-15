@@ -1,8 +1,8 @@
-# Intake Pipeline Design
+# Intake Pipeline: Design and Results on Generated Documents
 
 **How do you pull dates, dollars and terms out of a pile of mixed contracts, privately, on one graphics card, and still show where every answer came from?**
 
-A system design brief by **Tayler Erbe**, Applied AI Lab. It describes a document intake pipeline built as a working prototype: how it is organized, how its AI models are configured and swapped, and the rules that keep its output honest.
+A system design brief by **Tayler Erbe**, Applied AI Lab, with results on generated documents. It describes a document intake pipeline built as a working prototype: how it is organized, how its AI models are configured and swapped, the rules that keep its output honest, and how its routing compared with one large model.
 
 **Read the brief:** [tayler-erbe.github.io/intake-pipeline-lab-public/brief/](https://tayler-erbe.github.io/intake-pipeline-lab-public/brief/)
 
@@ -27,7 +27,7 @@ The pipeline runs end to end with real models on one GPU. On 72 generated docume
 
 ## Related work
 
-- [Document intelligence evaluation](https://tayler-erbe.github.io/tayler-portfolio/document-intelligence-evaluation.html): which local model should read which part of a document.
+- [Document intelligence evaluation](https://taylererbe.com/document-intelligence-evaluation.html): which local model should read which part of a document.
 - [Local document intelligence evaluation on GitHub](https://github.com/tayler-erbe/test-ocr-work): methods, results and the implementation roadmap.
 - [Portfolio](https://taylererbe.com/)
 
