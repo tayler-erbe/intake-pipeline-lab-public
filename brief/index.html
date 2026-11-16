@@ -90,14 +90,52 @@
 <div class="section-head">
 <p class="eyebrow">01 / THE LINE</p>
 <h2>An assembly line,<br>not a chatbot.</h2>
-<p>Documents are split into segments: prose, tables, forms, charts and highlighted passages. Each stage takes only the segments it handles, in order, across the whole batch.</p>
 </div>
-<ol class="pipeline">
-<li><span>01 / TAKE IN</span><h3>Ingest and triage</h3><p>Hash every file, skip duplicates, quarantine what can't be opened safely. Find native text, scanned pages, tables, forms, charts and highlights, and flag skewed or rotated pages.</p></li>
-<li><span>02 / READ</span><h3>Text first, models second</h3><p>Copy native text straight from the file. Reuse earlier OCR when it exists. Send only scanned pages to a page-reading model.</p></li>
-<li><span>03 / LOOK</span><h3>A route per region</h3><p>Layout, figure type, tables, charts and highlights each go to the model that tested best for that task.</p></li>
-<li><span>04 / UNDERSTAND</span><h3>Fields, then checks</h3><p>A text model points to the evidence for each field. Code normalizes dates, money and terms, then suggests document type and metadata.</p></li>
+<p class="flow-def"><b>Multi-model routed pipeline:</b> split every document into its parts and send each kind of part to the model that tested best for it. It runs like an assembly line: one model on the GPU at a time, working through its part from every document in the batch.</p>
+
+<div class="flow-step">
+<div class="flow-head"><span class="flow-n">1</span><h3>Split</h3><p>Every document is a mix. Each one is cut into its parts.</p></div>
+<div class="flow-split">
+<svg class="flow-doc" viewBox="0 0 132 168" role="img" aria-label="A document with text, a table, a chart, a scanned block and a highlighted line"><rect x="14" y="16" width="92" height="7" fill="#142b36"/><rect x="14" y="30" width="104" height="4" fill="#b6bfc2"/><rect x="14" y="40" width="104" height="4" fill="#b6bfc2"/><g fill="none" stroke="#386d68" stroke-width="2"><rect x="15" y="52" width="102" height="34"/><path d="M15 63h102M15 74h102M50 52v34M84 52v34"/></g><g fill="#6f8fb8"><rect x="22" y="116" width="8" height="10"/><rect x="36" y="106" width="8" height="20"/><rect x="50" y="112" width="8" height="14"/><rect x="64" y="102" width="8" height="24"/></g><path d="M15 96v31h66" fill="none" stroke="#6f8fb8" stroke-width="2"/><rect x="87" y="97" width="30" height="30" fill="#f3e6de" stroke="#8a4c28" stroke-width="2"/><path d="M92 105h20M92 112h20M92 119h20" stroke="#8a4c28" stroke-width="1.5"/><rect x="14" y="137" width="112" height="7" fill="#d9a520"/><rect x="14" y="151" width="78" height="4" fill="#b6bfc2"/></svg>
+<p class="flow-arrow" aria-hidden="true"><span>&rarr;</span>split</p>
+<ul class="flow-parts">
+<li><i class="sw c-text"></i>Typed text</li>
+<li><i class="sw c-table"></i>Tables</li>
+<li><i class="sw c-scan"></i>Scanned pages</li>
+<li><i class="sw c-chart"></i>Charts</li>
+<li><i class="sw c-high"></i>Highlights</li>
+</ul>
+</div>
+</div>
+
+<div class="flow-step">
+<div class="flow-head"><span class="flow-n">2</span><h3>Assembly line</h3><p>One station per kind of part. Each station runs the model that tested best for it.</p></div>
+<ol class="stations">
+<li class="on"><h4><i class="sw c-table"></i>Read tables</h4><p class="m">PaddleOCR-VL 1.6</p><p class="st">On the GPU now</p></li>
+<li><h4><i class="sw c-scan"></i>Read scans</h4><p class="m">Nemotron 3.5 Parse</p><p class="st">Next</p></li>
+<li><h4><i class="sw c-chart"></i>Read charts</h4><p class="m">Qwen3-VL 32B</p><p class="st">Waiting</p></li>
+<li><h4><i class="sw c-high"></i>Read highlights</h4><p class="m">Qwen3-VL 32B</p><p class="st">Waiting</p></li>
+<li><h4><i class="sw c-fields"></i>Find the fields</h4><p class="m">Qwen3 32B</p><p class="st">Waiting</p></li>
 </ol>
+<div class="belt" aria-hidden="true">
+<div class="c-table"><i></i><i></i><i></i><i></i><span>every document</span></div>
+<div class="c-scan"><i></i><i></i><i></i><span>&hellip;</span></div>
+<div class="c-chart"><i></i><i></i><i></i><span>&hellip;</span></div>
+<div class="c-high"><i></i><i></i><i></i><span>&hellip;</span></div>
+<div class="c-fields"><i></i><i></i><i></i><span>&hellip;</span></div>
+</div>
+<div class="gpu-note"><p class="gpu-badge">1 GPU &middot; <b>1 model at a time</b></p><p><b>Each model loads once per batch, not once per document,</b> then hands the GPU to the next station. Typed text skips the line: plain code copies it straight from the file.</p></div>
+</div>
+
+<div class="flow-step flow-show">
+<div class="flow-head"><span class="flow-n">3</span><h3>Show the work</h3></div>
+<div class="show">
+<div><h4>Models point, code copies</h4><p>Each value links to the exact words on the page.</p></div>
+<div><h4>A person reviews</h4><p>Every AI-proposed value is checked before it counts.</p></div>
+</div>
+</div>
+
+<h3 class="flow-sub">Every stage, in order</h3>
 <div class="compare-wrap" role="region" aria-label="The eleven stages" tabindex="0">
 <table class="compare stage-table">
 <thead><tr><th scope="col">Stage</th><th scope="col">Works on</th><th scope="col">What runs</th><th scope="col">Default route</th></tr></thead>
@@ -109,7 +147,7 @@
 <tr><td>Read tables<small>table</small></td><td class="unit">segment</td><td>Reads scanned tables into rows and columns</td><td><span class="tag model">PaddleOCR-VL</span></td></tr>
 <tr><td>Read scanned pages<small>page_prose</small></td><td class="unit">segment</td><td>Reads scanned page text; skipped where prior OCR already read it</td><td><span class="tag model">Nemotron Parse</span></td></tr>
 <tr><td>Read charts<small>chart</small></td><td class="unit">segment</td><td>Turns a chart into a data table, with the evaluated prompt and limits</td><td><span class="tag model">Qwen3-VL</span></td></tr>
-<tr><td>Read highlights<small>highlight</small></td><td class="unit">segment</td><td>Transcribes highlighted passages on scanned pages</td><td><span class="tag model">Qwen2.5-VL</span></td></tr>
+<tr><td>Read highlights<small>highlight</small></td><td class="unit">segment</td><td>Transcribes highlighted passages on scanned pages</td><td><span class="tag model">Qwen3-VL</span></td></tr>
 <tr><td>Find the fields<small>fields</small></td><td class="unit">document</td><td>Proposes field values by pointing to evidence IDs</td><td><span class="tag model">Qwen3 32B</span></td></tr>
 <tr><td>Check and tidy<small>normalize</small></td><td class="unit">document</td><td>Parses dates, amounts, currencies and terms; checks line-item totals</td><td><span class="tag rules">code</span></td></tr>
 <tr><td>Describe the document<small>metadata</small></td><td class="unit">document</td><td>Suggests title, type, category and parties, each with its sources</td><td><span class="tag rules">rules</span></td></tr>
@@ -137,7 +175,7 @@
 <div class="seg seg-scan"><b>E5</b> Scanned page: signatures</div>
 </figure>
 <div class="ex-note">
-<h3>Every document is a mix.</h3>
+<h3>Each part gets an evidence ID.</h3>
 <p>Triage cuts the lease into segments and gives each one an evidence ID. The ID follows the segment through every later step, so any value can be traced back to the exact place it came from.</p>
 </div>
 </div>
@@ -149,10 +187,9 @@
 <li class="s-text"><span class="tag rules">code</span><h3>Copy the text</h3><p class="ex-in">E1 · typed text</p><p class="ex-out">Copied straight from the file. No model needed.</p></li>
 <li class="s-table"><span class="tag model">PaddleOCR-VL</span><h3>Read the table</h3><p class="ex-in">E2 · table image</p><p class="ex-out">3 rows: base rent, maintenance, total.</p></li>
 <li class="s-chart"><span class="tag model">Qwen3-VL</span><h3>Read the chart</h3><p class="ex-in">E3 · bar chart</p><p class="ex-out">A small data table, one row per month.</p></li>
-<li class="s-high"><span class="tag model">Qwen2.5-VL</span><h3>Read the highlight</h3><p class="ex-in">E4 · marked clause</p><p class="ex-out">The highlighted words, transcribed.</p></li>
+<li class="s-high"><span class="tag model">Qwen3-VL</span><h3>Read the highlight</h3><p class="ex-in">E4 · marked clause</p><p class="ex-out">The highlighted words, transcribed.</p></li>
 <li class="s-scan"><span class="tag model">Nemotron Parse</span><h3>Read the scan</h3><p class="ex-in">E5 · scanned page</p><p class="ex-out">Page text with line positions.</p></li>
 </ol>
-<p class="ex-caption"><b>One GPU, one model at a time.</b> Each model loads once for the whole batch, reads its kind of segment from every document, then hands the GPU to the next model.</p>
 </div>
 
 <div class="ex-step">
@@ -329,28 +366,43 @@
 <div class="section-head">
 <p class="eyebrow">05 / RESULTS ON GENERATED DOCUMENTS</p>
 <h2>Routed, against one<br>big model.</h2>
-<p>The design claims that a specialist model per stage beats one large model doing everything. In November 2026 I tested that claim: three setups read the same 72 generated documents (1,276 pages) on one 32 GB graphics card, which sits between the 24 GB and 48 GB server cards the pipeline is meant for, and code scored every extracted value against a known answer key.</p>
+<p>The design claims that a specialist model per stage beats one large model doing everything. In November 2026 I tested that claim: three setups read the same 72 generated documents (1,276 pages) on one 32 GB graphics card, which sits between the 24 GB and 48 GB server cards the pipeline is meant for, and code scored the extracted values against a known answer key.</p>
+</div>
+<div class="score">
+<p class="score-eyebrow">Which model did which task, and how each setup scored on the same GPU</p>
+<div class="score-wrap" role="region" aria-label="Models and scores for the three setups" tabindex="0">
+<table>
+<thead><tr><td></td><th scope="col" class="r">Multi-model routed pipeline</th><th scope="col">One large model</th><th scope="col">Smaller routed pipeline</th></tr></thead>
+<tbody>
+<tr><th scope="row"><i class="sw c-table"></i>Tables</th><td class="r">PaddleOCR-VL 1.6</td><td class="one" rowspan="5">Qwen3-VL 32B<small>does every task</small></td><td>PaddleOCR-VL 1.6</td></tr>
+<tr><th scope="row"><i class="sw c-scan"></i>Scanned pages</th><td class="r">Nemotron 3.5 Parse</td><td>Nemotron 3.5 Parse</td></tr>
+<tr><th scope="row"><i class="sw c-chart"></i>Charts</th><td class="r">Qwen3-VL 32B</td><td>Qwen3-VL 8B</td></tr>
+<tr><th scope="row"><i class="sw c-high"></i>Highlights</th><td class="r">Qwen3-VL 32B</td><td>Qwen3-VL 8B</td></tr>
+<tr><th scope="row"><i class="sw c-fields"></i>Find the fields</th><td class="r">Qwen3 32B</td><td>gpt-oss-20b</td></tr>
+<tr class="big"><th scope="row">Critical fields correct</th><td class="r">94.3%<span class="bar" style="width:94.3%"></span></td><td>86.6%<span class="bar" style="width:86.6%"></span></td><td>76.3%<span class="bar" style="width:76.3%"></span></td></tr>
+<tr><th scope="row">All values correct</th><td class="r">87.7%</td><td>86.4%</td><td>75.9%</td></tr>
+<tr><th scope="row">Full run time</th><td class="r">75 min</td><td>about 2 h 10 min</td><td>98 min</td></tr>
+</tbody>
+</table>
+</div>
+<p class="score-foot"><span>Accuracy is scored on 51 of the 72 generated documents (299 critical answers, 780 in all). Run time covers all 72.</span></p>
 </div>
 <div class="compare-wrap">
 <table class="compare stage-table results-compare">
-<thead><tr><th>Measure</th><th>Routed pipeline</th><th>One large model</th><th>Small-card models</th></tr></thead>
+<thead><tr><th>Measure</th><th>Multi-model routed pipeline</th><th>One large model</th><th>Smaller routed pipeline</th></tr></thead>
 <tbody>
-<tr><td>Models used in each setup</td><td>A specialist per stage: PaddleOCR-VL-1.6, Nemotron 3.5 Parse, Qwen3-VL 32B, Qwen3 32B</td><td>Qwen3-VL 32B for every stage: the largest general vision model the card could hold</td><td>The same two parsers, with Qwen3-VL 8B and gpt-oss-20b, held to 22.5 GB of memory</td></tr>
-<tr><td>Critical fields correct<small>299 answers</small></td><td><b>94.3%</b></td><td>86.6%</td><td>76.3%</td></tr>
-<tr><td>All values correct<small>780 answers</small></td><td><b>87.7%</b></td><td>86.4%</td><td>75.9%</td></tr>
 <tr><td>Values given where the answer key has none<small>lower is better</small></td><td><b>138</b></td><td>231</td><td>257</td></tr>
 <tr><td>Table rows read<small>2,922 rows</small></td><td>2,914</td><td>2,914</td><td>2,914</td></tr>
 <tr><td>Chart points within 5%<small>96 points</small></td><td>50</td><td>50</td><td><b>73</b></td></tr>
-<tr><td>Time for all 72 documents</td><td><b>75 minutes</b></td><td>about 2 hours 10 minutes</td><td>98 minutes</td></tr>
 </tbody>
 </table>
 </div>
 <div class="results-band" style="margin-top:40px">
 <article><p class="route-id">ACCURACY</p><h3>Close overall, except where it matters</h3><p>On all values the routed pipeline and the single model are 1.3 points apart on 780 answers, inside the 95% interval of either result. On critical fields (dates, amounts, renewal and termination terms) the routed pipeline is ahead by almost eight points, and it gives fewer values for fields the answer key leaves empty: 138 against 231, about 40% fewer.</p></article>
 <article><p class="route-id">SPEED</p><h3>Routing was also faster</h3><p>Changing models between stages cost about 5 of the 75 minutes. The small parsers read tables and scanned pages many times faster than a large general model, which more than pays for the swaps.</p></article>
-<article><p class="route-id">SMALL CARD</p><h3>It fits, at a price</h3><p>The small-card set ran end to end inside 22.5 GB but lost about 12 points on all values and 18 on critical fields, almost all in the model that fills in the fields. That model is the one to replace before running on a 24 GB card. Charts are the one row this setup wins. It reads them with a smaller vision model at full precision, where the other two use a 32B model compressed to 4 bits. That is one run on 22 charts, and the reason is not yet known.</p></article>
+<article><p class="route-id">SMALL CARD</p><h3>It fits, at a price</h3><p>The smaller routed pipeline ran end to end inside 22.5 GB but lost about 12 points on all values and 18 on critical fields, almost all in the model that fills in the fields. That model is the one to replace before running on a 24 GB card. Charts are the one row this setup wins. It reads them with a smaller vision model at full precision, where the other two use a 32B model compressed to 4 bits. That is one run on 22 charts, and the reason is not yet known.</p></article>
 </div>
-<div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>What these numbers are, and are not.</h3><p>The documents are generated: fictional contracts, leases and purchase orders with scans, tables, charts and highlights, built so the right answers are known. The numbers compare designs with each other. They are not accuracy on real documents. A value given where the key has none is still copied from the page, or worked out by code from copied values: the words are real, but that field has no answer in that document. Typical cases are a number in the title taken as a reference number, and an end date worked out from a start date and a term. The line has also run end to end on a private sample of real documents, on private hardware, with no outside service involved. No figures from that run are published, and accuracy on those documents stays unmeasured until reviewers label them. Small-card times were measured on the larger card with memory capped, not on a 24 GB card. The generated tables were clean enough that all three table readers returned the same cells.</p></div></div>
+<div class="finding-note"><span class="note-symbol" aria-hidden="true">!</span><div><h3>What these numbers are, and are not.</h3><p>The documents are generated: fictional contracts, leases and purchase orders with scans, tables, charts and highlights, built so the right answers are known. The numbers compare designs with each other. They are not accuracy on real documents. A value given where the key has none is still copied from the page, or worked out by code from copied values: the words are real, but that field has no answer in that document. Typical cases are a number in the title taken as a reference number, and an end date worked out from a start date and a term. The line has also run end to end on a private sample of real documents, on private hardware, with no outside service involved. No figures from that run are published, and accuracy on those documents stays unmeasured until reviewers label them. The smaller pipeline's times were measured on the larger card with memory capped, not on a 24 GB card. The generated tables were clean enough that all three table readers returned the same cells.</p></div></div>
 </section>
 
 <section class="use-section" id="next">
@@ -396,7 +448,7 @@
 </section>
 </main>
 <footer class="wrap">
-<div><strong>Applied AI Lab</strong><p>Tayler Erbe · Last updated 14 November 2026 · System design and results on generated documents. Prototype; accuracy on real documents not yet measured.</p></div>
+<div><strong>Applied AI Lab</strong><p>Tayler Erbe · Last updated 16 November 2026 · System design and results on generated documents. Prototype; accuracy on real documents not yet measured.</p></div>
 <a href="https://taylererbe.com/document-intelligence-evaluation.html">Model evaluation ↗</a>
 </footer>
 </body>
