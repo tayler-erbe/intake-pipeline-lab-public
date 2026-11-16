@@ -8,7 +8,7 @@
 <a href="#main" class="skip">Skip to content</a>
 <header class="site-header">
 <a href="index.html" class="brand" aria-label="Applied AI Lab home"><span class="brand-mark">AI<span>↗</span></span><span>Applied AI<br><strong>Lab</strong></span></a>
-<nav aria-label="Main navigation"><a href="#why">Why</a><a href="#line">The line</a><a href="#configure">Configure</a><a href="#rules">Rules</a><a href="#catalogs">Catalogs</a><a href="#review">Review</a><a href="#results">Results</a><a href="#next">Status</a></nav>
+<nav aria-label="Main navigation"><a href="#why">Why</a><a href="#line">The line</a><a href="#example">Example</a><a href="#configure">Configure</a><a href="#rules">Rules</a><a href="#catalogs">Catalogs</a><a href="#review">Review</a><a href="#results">Results</a><a href="#next">Status</a></nav>
 <a class="repo-link" href="https://taylererbe.com/document-intelligence-evaluation.html">Model evaluation <span aria-hidden="true">↗</span></a>
 </header>
 <main id="main">
@@ -117,6 +117,81 @@
 </table>
 </div>
 <p class="chart-note" style="margin-top:14px">Default routes follow my <a href="https://taylererbe.com/document-intelligence-evaluation.html">local model evaluation</a> on public benchmarks. They are starting points to confirm on real documents, not production approvals.</p>
+</section>
+
+<section class="section wrap" id="example">
+<div class="section-head">
+<p class="eyebrow">WORKED EXAMPLE · GENERATED DOCUMENT</p>
+<h2>One document,<br>start to finish.</h2>
+<p>This is a fictional equipment lease made up for this page. It is not a real document. Follow it through the line to see what each model does, what code does, and where a person steps in.</p>
+</div>
+
+<div class="ex-step">
+<p class="ex-num">1 / SPLIT</p>
+<div class="ex-split">
+<figure class="ex-doc" aria-label="A sample lease broken into five kinds of segment">
+<div class="seg seg-text"><b>E1</b> Typed text: lease terms</div>
+<div class="seg seg-table"><b>E2</b> Table: monthly charges</div>
+<div class="seg seg-chart"><b>E3</b> Chart: pages used per month</div>
+<div class="seg seg-high"><b>E4</b> Highlighted clause: renewal</div>
+<div class="seg seg-scan"><b>E5</b> Scanned page: signatures</div>
+</figure>
+<div class="ex-note">
+<h3>Every document is a mix.</h3>
+<p>Triage cuts the lease into segments and gives each one an evidence ID. The ID follows the segment through every later step, so any value can be traced back to the exact place it came from.</p>
+</div>
+</div>
+</div>
+
+<div class="ex-step">
+<p class="ex-num">2 / ASSEMBLY LINE</p>
+<ol class="ex-line">
+<li class="s-text"><span class="tag rules">code</span><h3>Copy the text</h3><p class="ex-in">E1 · typed text</p><p class="ex-out">Copied straight from the file. No model needed.</p></li>
+<li class="s-table"><span class="tag model">PaddleOCR-VL</span><h3>Read the table</h3><p class="ex-in">E2 · table image</p><p class="ex-out">3 rows: base rent, maintenance, total.</p></li>
+<li class="s-chart"><span class="tag model">Qwen3-VL</span><h3>Read the chart</h3><p class="ex-in">E3 · bar chart</p><p class="ex-out">A small data table, one row per month.</p></li>
+<li class="s-high"><span class="tag model">Qwen2.5-VL</span><h3>Read the highlight</h3><p class="ex-in">E4 · marked clause</p><p class="ex-out">The highlighted words, transcribed.</p></li>
+<li class="s-scan"><span class="tag model">Nemotron Parse</span><h3>Read the scan</h3><p class="ex-in">E5 · scanned page</p><p class="ex-out">Page text with line positions.</p></li>
+</ol>
+<p class="ex-caption"><b>One GPU, one model at a time.</b> Each model loads once for the whole batch, reads its kind of segment from every document, then hands the GPU to the next model.</p>
+</div>
+
+<div class="ex-step">
+<p class="ex-num">3 / FIND THE FIELDS</p>
+<p class="ex-lead">A text model reads everything the line produced and points to the evidence for each field. It does not retype the answer. Code copies the words from the cited segment.</p>
+<div class="compare-wrap" role="region" aria-label="Fields proposed for the sample lease" tabindex="0">
+<table class="compare stage-table ex-fields">
+<thead><tr><th scope="col">Field</th><th scope="col">Proposed value</th><th scope="col">Evidence</th><th scope="col">Made by</th></tr></thead>
+<tbody>
+<tr><td>Monthly total</td><td>$4,250.00</td><td>E2, last row</td><td><span class="tag rules">code copied</span></td></tr>
+<tr><td>Start date</td><td>1 March 2027</td><td>E1, section 2</td><td><span class="tag rules">code normalized</span></td></tr>
+<tr><td>Renewal</td><td>Renews for 12 months unless cancelled</td><td>E4, highlight</td><td><span class="tag rules">code copied</span></td></tr>
+<tr><td>Notice to cancel</td><td>60 days</td><td>E1, section 7</td><td><span class="tag rules">code normalized</span></td></tr>
+<tr><td>Date signed</td><td>12 February 2027</td><td>E5, line 4</td><td><span class="tag model">read from a scan</span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="ex-step">
+<p class="ex-num">4 / CHECK</p>
+<ul class="ex-checks">
+<li class="pass"><b>Passed</b><span>Base rent $3,900.00 plus maintenance $350.00 equals the stated total of $4,250.00.</span></li>
+<li class="pass"><b>Passed</b><span>Every date parses, and the start date falls after the signing date.</span></li>
+<li class="flag"><b>Sent to review first</b><span>The signing date came from a scan, so it carries more risk than typed text. It goes to the top of the queue.</span></li>
+</ul>
+</div>
+
+<div class="ex-step">
+<p class="ex-num">5 / A PERSON DECIDES</p>
+<div class="ex-review">
+<div class="ex-crop"><span>E5 · line 4 · cropped from the scan</span><p>Signed this 12th day of February 2027</p></div>
+<div class="ex-decide">
+<p>Date signed: <b>12 February 2027</b></p>
+<p class="ex-btns"><span class="ex-btn">Accept</span><span class="ex-btn">Correct</span><span class="ex-btn">Not found</span></p>
+<p class="ex-small">Nothing counts as confirmed until a person accepts it. The decision is saved as its own record, and the model's original answer stays on file.</p>
+</div>
+</div>
+</div>
 </section>
 
 <section class="use-section" id="configure">
