@@ -110,6 +110,7 @@
 
 <div class="flow-step">
 <div class="flow-head"><span class="flow-n">2</span><h3>Assembly line</h3><p>One station per kind of part. Each station runs the model that tested best for it.</p></div>
+<div class="line-wrap">
 <ol class="stations">
 <li class="on"><h4><i class="sw c-table"></i>Read tables</h4><p class="m">PaddleOCR-VL 1.6</p><p class="st">On the GPU now</p></li>
 <li><h4><i class="sw c-scan"></i>Read scans</h4><p class="m">Nemotron 3.5 Parse</p><p class="st">Next</p></li>
@@ -123,6 +124,7 @@
 <div class="c-chart"><i></i><i></i><i></i><span>&hellip;</span></div>
 <div class="c-high"><i></i><i></i><i></i><span>&hellip;</span></div>
 <div class="c-fields"><i></i><i></i><i></i><span>&hellip;</span></div>
+</div>
 </div>
 <div class="gpu-note"><p class="gpu-badge">1 GPU &middot; <b>1 model at a time</b></p><p><b>Each model loads once per batch, not once per document,</b> then hands the GPU to the next station. Typed text skips the line: plain code copies it straight from the file.</p></div>
 </div>
